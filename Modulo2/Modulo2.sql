@@ -750,7 +750,7 @@ sp_configure 'xp_cmdshell', '1'
 RECONFIGURE
 
 DECLARE @COM VARCHAR(5000)
-DECLARE @RUTA VARCHAR(1000) = 'C:\Users\TEMP\Desktop\Example\'
+DECLARE @RUTA VARCHAR(1000) = 'C:\Users\TEMP\Desktop\Example\''
 create TABLE COPIA(ARCHIVO VARCHAR(1000))
 DECLARE @ARCHIVO VARCHAR(1000)
  
@@ -991,3 +991,79 @@ fetch next from cursorProducto into @codprod
 end
 close cursorProducto
 deallocate cursorProducto
+
+------------------------------------------------------------
+--------------------Transacciones --------------------------
+------------------------------------------------------------
+
+SELECT @@TRANCOUNT -- imprimira 0
+
+------------------------------------------------------------
+BEGIN TRAN nombre_transaccion
+-- Operaciones a realizar 
+
+------------------------------------------------------------
+SELECT @@TRANCOUNT -- Imprimira 1 
+
+------------------------------------------------------------
+-- ¿ Que debo hacer SI deseo guardar el cambio?
+COMMIT tran nombre_transaccion
+-- ¿ Que debo hacer si NO deseo guardar el cambio ?
+ROLLBACK TRAN
+
+--------------------- Puntos guardados(SavePoints) ------------------------
+
+BEGIN nombre_tran1
+-- Operaciones a realizar 
+BEGIN nombre_tran2
+-- Operaciones a realizar2 
+BEGIN nombre_tran3
+-- Operaciones a realizar3 
+SAVE TRAN GUARDADO
+-- Guardando un punto
+BEGIN nombre_tran4
+-- Operaciones a realizar4 
+BEGIN nombre_tran5
+-- Operaciones a realizar5
+ROLLBACK TRAN GUARDADO
+COMMIT TRAN nombre_tran5
+COMMIT TRAN nombre_tran4
+COMMIT TRAN nombre_tran3
+COMMIT TRAN nombre_tran2
+COMMIT TRAN nombre_tran1
+
+-- Solo se guardara hasta el punto 3
+
+------------------------------------------------------------
+------------------Manejo de errores ------------------------
+------------------------------------------------------------
+
+-- Forma general
+BEGIN TRY  
+     { sql_statement | statement_block }  
+END TRY  
+BEGIN CATCH  
+     [ { sql_statement | statement_block } ]  
+END CATCH  
+
+--Creando procedimiento
+CREATE PROCEDURE usp_GetErrorInfo  
+AS  
+SELECT  
+    ERROR_NUMBER() AS ErrorNumber  
+    ,ERROR_SEVERITY() AS ErrorSeverity  
+    ,ERROR_STATE() AS ErrorState  
+    ,ERROR_PROCEDURE() AS ErrorProcedure  
+    ,ERROR_LINE() AS ErrorLine  
+    ,ERROR_MESSAGE() AS ErrorMessage;  
+GO  
+
+BEGIN TRY  
+    -- Generate divide-by-zero error.  
+    SELECT 1/0;  
+END TRY  
+BEGIN CATCH  
+    -- Execute error retrieval routine.  
+    EXECUTE usp_GetErrorInfo;  
+END CATCH;   
+
